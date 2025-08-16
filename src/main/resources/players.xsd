@@ -1,6 +1,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="http://www.example.com/countries"
-           xmlns="http://www.example.com/countries"
+           targetNamespace="http://example.com/players"
+           xmlns="http://example.com/players"
            elementFormDefault="qualified">
 
     <xs:element name="SearchRequest">
@@ -14,13 +14,13 @@
     <xs:element name="SearchResponse">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="Country" maxOccurs="unbounded">
+                <xs:element name="Player" maxOccurs="unbounded">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="name" type="xs:string"/>
-                            <xs:element name="subRegion" type="xs:string"/>
-                            <xs:element name="year" type="xs:int"/>
-                            <xs:element name="value" type="xs:float"/>
+                            <xs:element name="team" type="xs:string"/>
+                            <xs:element name="season" type="xs:int"/>
+                            <xs:element name="points" type="xs:float"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

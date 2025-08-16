@@ -5,17 +5,17 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.util.List;
 
-@XmlRootElement(name = "SearchResponse", namespace = "http://example.com/countries")
+@XmlRootElement(name = "SearchResponse", namespace = "http://example.com/players")
 public class SearchResponse {
-    private List<Countries.Country> countries;
+    private List<Players.Player> players;
 
-    @XmlElement(name = "Country", namespace = "http://example.com/countries")
-    public List<Countries.Country> getCountries() {
-        return countries;
+    @XmlElement(name = "Player", namespace = "http://example.com/players")
+    public List<Players.Player> getPlayers() {
+        return players;
     }
 
-    public void setCountries(List<Countries.Country> countries) {
-        this.countries = countries;
+    public void setPlayers(List<Players.Player> players) {
+        this.players = players;
     }
 
 }
