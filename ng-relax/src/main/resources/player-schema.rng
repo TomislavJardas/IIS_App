@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
     <rng:start>
-        <rng:element name="Countries">
+        <rng:element name="Players">
 
             <rng:zeroOrMore>
-                <rng:element name="Country">
+                <rng:element name="Player">
 
                     <rng:element name="name">
                         <rng:text/>
                     </rng:element>
-                    <rng:element name="subRegion">
+                    <rng:element name="team">
                         <rng:text/>
                     </rng:element>
-                    <rng:element name="year">
+                    <rng:element name="season">
                         <rng:data type="integer" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
                     </rng:element>
-                    <rng:element name="value">
+                    <rng:element name="points">
                         <rng:data type="float" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
                     </rng:element>
 

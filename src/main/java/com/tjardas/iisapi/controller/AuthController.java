@@ -1,9 +1,10 @@
 package com.tjardas.iisapi.controller;
 
 import com.tjardas.iisapi.utils.JwtUtils;
+import io.jsonwebtoken.JwtException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,12 +22,25 @@ public class AuthController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public String authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public TokenResponse authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
         User user = (User) authentication.getPrincipal();
-        return jwtUtils.generateToken(user.getUsername());
+        String accessToken = jwtUtils.generateAccessToken(user.getUsername());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
+        return new TokenResponse(accessToken, refreshToken);
+    }
+
+    @PostMapping("/refresh")
+    public TokenResponse refreshToken(@RequestBody RefreshRequest request) {
+        if (!jwtUtils.validateToken(request.getRefreshToken())) {
+            throw new JwtException("Invalid refresh token");
+        }
+        String username = jwtUtils.getUsernameFromToken(request.getRefreshToken());
+        String accessToken = jwtUtils.generateAccessToken(username);
+        String refreshToken = jwtUtils.generateRefreshToken(username);
+        return new TokenResponse(accessToken, refreshToken);
     }
 }
 
@@ -34,5 +48,17 @@ public class AuthController {
 class LoginRequest {
     private String username;
     private String password;
+}
+
+@Getter
+class RefreshRequest {
+    private String refreshToken;
+}
+
+@Getter
+@AllArgsConstructor
+class TokenResponse {
+    private String accessToken;
+    private String refreshToken;
 }
 
