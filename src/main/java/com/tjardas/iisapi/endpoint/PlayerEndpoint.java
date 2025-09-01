@@ -1,9 +1,9 @@
 package com.tjardas.iisapi.endpoint;
 
-import com.tjardas.iisapi.xml.Countries;
+import com.tjardas.iisapi.xml.Players;
 import com.tjardas.iisapi.xml.SearchRequest;
 import com.tjardas.iisapi.xml.SearchResponse;
-import com.tjardas.iisapi.service.CsvService;
+import com.tjardas.iisapi.service.NbaApiService;
 import com.tjardas.iisapi.service.XmlValidationService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
@@ -32,44 +32,43 @@ import java.util.List;
 
 import static com.ibm.wsdl.util.xml.DOM2Writer.nodeToString;
 
-
 @Endpoint
 @RequiredArgsConstructor
-public class CountryEndpoint {
+public class PlayerEndpoint {
 
-    private static final Logger logger = LoggerFactory.getLogger(CountryEndpoint.class);
-    private static final String NAMESPACE_URI = "http://example.com/countries";
-    private final CsvService csvService;
+    private static final Logger logger = LoggerFactory.getLogger(PlayerEndpoint.class);
+    private static final String NAMESPACE_URI = "http://example.com/players";
+    private final NbaApiService nbaApiService;
     private final XmlValidationService xmlValidationService;
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "SearchRequest")
     @ResponsePayload
-    public SearchResponse searchCountries(@RequestPayload SearchRequest request) throws Exception {
+    public SearchResponse searchPlayers(@RequestPayload SearchRequest request) throws Exception {
         String searchTerm = request.getSearchTerm();
 
         if (searchTerm == null) {
             throw new IllegalArgumentException("Search term cannot be null");
         }
-        Countries countries = csvService.getFilteredCountries(null, null, null);
+        Players players = nbaApiService.getFilteredPlayers(null, null, null);
 
-        JAXBContext context = JAXBContext.newInstance(Countries.class);
+        JAXBContext context = JAXBContext.newInstance(Players.class);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
         StringWriter writer = new StringWriter();
-        marshaller.marshal(countries, writer);
+        marshaller.marshal(players, writer);
 
         String xmlContent = writer.toString();
 
         String searchResult = searchXmlWithXpath(xmlContent, searchTerm);
 
-        xmlValidationService.validateXml(searchResult, "SOAP-validation.xsd");
+        xmlValidationService.validateXml(searchResult, "player-validation.xsd");
 
         if (searchResult.isEmpty()) {
             throw new Exception("Search result is empty");
         }
         SearchResponse response = new SearchResponse();
-        response.setCountries(parseXmlToCountryList(searchResult));
+        response.setPlayers(parseXmlToPlayerList(searchResult));
 
         return response;
     }
@@ -88,14 +87,14 @@ public class CountryEndpoint {
             @Override
             public String getNamespaceURI(String prefix) {
                 if ("ns2".equals(prefix)) {
-                    return "http://example.com/countries";
+                    return "http://example.com/players";
                 }
                 return XMLConstants.NULL_NS_URI;
             }
 
             @Override
             public String getPrefix(String namespaceURI) {
-                if ("http://example.com/countries".equals(namespaceURI)) {
+                if ("http://example.com/players".equals(namespaceURI)) {
                     return "ns2";
                 }
                 return null;
@@ -110,7 +109,7 @@ public class CountryEndpoint {
     }
 
     private XPathExpression compileXPathExpression(XPath xpath, String searchTerm) throws Exception {
-        String xpathExpression = "//*[local-name()='Country']/*[local-name()='name' and contains(text(), '" + searchTerm + "')]";
+        String xpathExpression = "//*[local-name()='Player']/*[local-name()='name' and contains(text(), '" + searchTerm + "')]";
         logger.debug("XPath expression: {}", xpathExpression);
         return xpath.compile(xpathExpression);
     }
@@ -122,21 +121,20 @@ public class CountryEndpoint {
 
     private String buildSearchResultXml(NodeList nodes) {
         StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append("<Countries xmlns=\"http://example.com/countries\">");
+        resultBuilder.append("<Players xmlns=\"http://example.com/players\">");
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i).getParentNode();
             resultBuilder.append(nodeToString(node));
         }
-        resultBuilder.append("</Countries>");
+        resultBuilder.append("</Players>");
         return resultBuilder.toString();
     }
 
-    private List<Countries.Country> parseXmlToCountryList(String xml) throws Exception {
-        JAXBContext context = JAXBContext.newInstance(Countries.class);
+    private List<Players.Player> parseXmlToPlayerList(String xml) throws Exception {
+        JAXBContext context = JAXBContext.newInstance(Players.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         StringReader reader = new StringReader(xml);
-        Countries countries = (Countries) unmarshaller.unmarshal(reader);
-        return countries.getCountries();
+        Players players = (Players) unmarshaller.unmarshal(reader);
+        return players.getPlayers();
     }
-
 }
