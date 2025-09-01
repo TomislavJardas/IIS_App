@@ -2,7 +2,6 @@ package com.tjardas.iisapi.config;
 
 import com.tjardas.iisapi.filter.JwtAuthenticationFilter;
 import com.tjardas.iisapi.utils.JwtUtils;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;

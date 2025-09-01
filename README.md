@@ -21,4 +21,4 @@ Run the backend with Maven:
 
 ## Notes
 
-The backend uses the NBA RapidAPI service. Set the `RAPIDAPI_KEY` environment variable to override the default key.
+The backend uses the NBA RapidAPI service. Set the `RAPIDAPI_KEY` environment variable to supply your own key; otherwise a default key is used.
