@@ -1,7 +1,7 @@
 package com.tjardas.iisapi.controller;
 
 import com.tjardas.iisapi.model.PlayerEntity;
-import com.tjardas.iisapi.repository.PlayerRepository;
+import com.tjardas.iisapi.service.NbaApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,41 +13,31 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlayerCrudController {
 
-    private final PlayerRepository playerRepository;
+    private final NbaApiService nbaApiService;
 
     @GetMapping
     public List<PlayerEntity> getAll() {
-        return playerRepository.findAll();
+        return nbaApiService.getAllPlayers();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PlayerEntity> getById(@PathVariable Long id) {
-        return playerRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/{recordId}")
+    public ResponseEntity<PlayerEntity> getById(@PathVariable String recordId) {
+        return ResponseEntity.ok(nbaApiService.getPlayerById(recordId));
     }
 
     @PostMapping
     public PlayerEntity create(@RequestBody PlayerEntity player) {
-        return playerRepository.save(player);
+        return nbaApiService.createPlayer(player);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PlayerEntity> update(@PathVariable Long id, @RequestBody PlayerEntity player) {
-        return playerRepository.findById(id)
-                .map(existing -> {
-                    player.setId(existing.getId());
-                    return ResponseEntity.ok(playerRepository.save(player));
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @PatchMapping("/{recordId}")
+    public ResponseEntity<PlayerEntity> update(@PathVariable String recordId, @RequestBody PlayerEntity player) {
+        return ResponseEntity.ok(nbaApiService.updatePlayer(recordId, player));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (playerRepository.existsById(id)) {
-            playerRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<Void> delete(@PathVariable String recordId) {
+        nbaApiService.deletePlayer(recordId);
+        return ResponseEntity.noContent().build();
     }
 }
