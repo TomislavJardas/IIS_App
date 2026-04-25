@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -78,14 +80,14 @@ public class NbaApiService {
 
     public PlayerEntity createPlayer(PlayerEntity player) {
         String endpoint = String.format("%s/api/collections/%s/records", pocketBaseInstance, PLAYERS_COLLECTION);
-        HttpEntity<PlayerEntity> requestEntity = new HttpEntity<>(player, buildHeaders());
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(toPocketBasePayload(player), buildHeaders());
         ResponseEntity<JsonNode> response = restTemplate.exchange(endpoint, HttpMethod.POST, requestEntity, JsonNode.class);
         return toEntity(response.getBody());
     }
 
     public PlayerEntity updatePlayer(String recordId, PlayerEntity player) {
         String endpoint = String.format("%s/api/collections/%s/records/%s", pocketBaseInstance, PLAYERS_COLLECTION, recordId);
-        HttpEntity<PlayerEntity> requestEntity = new HttpEntity<>(player, buildHeaders());
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(toPocketBasePayload(player), buildHeaders());
         ResponseEntity<JsonNode> response = restTemplate.exchange(endpoint, HttpMethod.PATCH, requestEntity, JsonNode.class);
         return toEntity(response.getBody());
     }
@@ -105,6 +107,15 @@ public class NbaApiService {
         return headers;
     }
 
+    private Map<String, Object> toPocketBasePayload(PlayerEntity player) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("name", player.getName());
+        payload.put("team", player.getTeam());
+        payload.put("season", player.getSeason());
+        payload.put("points", player.getPoints());
+        return payload;
+    }
+
     private Players.Player toXmlPlayer(JsonNode node) {
         Players.Player player = new Players.Player();
         player.setName(node.path("name").asText(""));
@@ -122,11 +133,7 @@ public class NbaApiService {
 
         String rawId = node.path("id").asText("");
         if (!rawId.isBlank()) {
-            try {
-                player.setId(Long.parseLong(rawId));
-            } catch (NumberFormatException ex) {
-                log.debug("PocketBase record id {} is non-numeric; leaving PlayerEntity.id unset", rawId);
-            }
+            player.setRecordId(rawId);
         }
 
         player.setName(node.path("name").asText(""));
