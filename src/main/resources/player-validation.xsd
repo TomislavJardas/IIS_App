@@ -7,8 +7,8 @@
                         <xs:sequence>
                             <xs:element name="name" type="xs:string"/>
                             <xs:element name="team" type="xs:string"/>
-                            <xs:element name="points" type="xs:float"/>
                             <xs:element name="season" type="xs:int"/>
+                            <xs:element name="points" type="xs:float"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
