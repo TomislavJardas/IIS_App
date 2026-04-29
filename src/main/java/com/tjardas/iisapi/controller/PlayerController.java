@@ -1,7 +1,6 @@
 package com.tjardas.iisapi.controller;
 
 import com.tjardas.iisapi.model.PlayerEntity;
-import com.tjardas.iisapi.repository.PlayerRepository;
 import com.tjardas.iisapi.xml.Players;
 import com.tjardas.iisapi.service.NbaApiService;
 import com.tjardas.iisapi.service.XmlValidationService;
@@ -31,7 +30,6 @@ public class PlayerController {
 
     private final NbaApiService nbaApiService;
     private final XmlValidationService xmlValidationService;
-    private final PlayerRepository playerRepository;
 
     @GetMapping(produces = MediaType.APPLICATION_XML_VALUE, path = "/players")
     public String getPlayersAsXml(
@@ -75,9 +73,11 @@ public class PlayerController {
             }
         }
 
-        playerRepository.saveAll(playerEntities);
-        playerRepository.findAll().forEach(playerEntity -> log.info(playerEntity.toString()));
+        playerEntities.forEach(player -> {
+            PlayerEntity created = nbaApiService.createPlayer(player);
+            log.info("Saved PlayerEntity to PocketBase: {}", created);
+        });
 
-        return "XML successfully validated and saved!";
+        return "XML successfully validated and saved to PocketBase players collection!";
     }
 }
