@@ -29,7 +29,7 @@ public class NbaApiService {
     @Value("${pocketbase.auth-token:}")
     private String pocketBaseAuthToken;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
 
     public Players getFilteredPlayers(String name, String team, Integer season) {
         String endpoint = String.format("%s/api/collections/%s/records", pocketBaseInstance, PLAYERS_COLLECTION);
