@@ -1,5 +1,7 @@
 package com.tjardas.iisapi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +16,12 @@ public class PlayerEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Long id;
+
+    @Transient
+    @JsonProperty("id")
+    private String recordId;
 
     @Column(name = "player_name")
     private String name;
@@ -32,6 +39,7 @@ public class PlayerEntity {
     public String toString() {
         return "PlayerEntity{" +
                 "id=" + id +
+                ", recordId='" + recordId + '\'' +
                 ", name='" + name + '\'' +
                 ", team='" + team + '\'' +
                 ", season=" + season +

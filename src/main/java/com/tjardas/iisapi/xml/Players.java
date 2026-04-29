@@ -19,7 +19,7 @@ public class Players {
         this.players = players;
     }
 
-    @XmlType(namespace = "http://example.com/players")
+    @XmlType(namespace = "http://example.com/players", propOrder = {"name", "team", "season", "points"})
     public static class Player {
         private String name;
         private String team;
