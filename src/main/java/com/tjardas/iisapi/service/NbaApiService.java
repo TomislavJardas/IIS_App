@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +30,6 @@ public class NbaApiService {
     private String pocketBaseAuthToken;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final WebClient webClient = WebClient.builder().build();
 
     public Players getFilteredPlayers(String name, String team, Integer season) {
         String endpoint = String.format("%s/api/collections/%s/records", pocketBaseInstance, PLAYERS_COLLECTION);
@@ -89,16 +88,9 @@ public class NbaApiService {
 
     public PlayerEntity updatePlayer(String recordId, PlayerEntity player) {
         String endpoint = String.format("%s/api/collections/%s/records/%s", pocketBaseInstance, PLAYERS_COLLECTION, recordId);
-
-        JsonNode response = webClient.patch()
-                .uri(endpoint)
-                .headers(headers -> headers.addAll(buildHeaders()))
-                .bodyValue(toPocketBasePayload(player))
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .block();
-
-        return toEntity(response);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(toPocketBasePayload(player), buildHeaders());
+        ResponseEntity<JsonNode> response = restTemplate.exchange(endpoint, HttpMethod.PATCH, requestEntity, JsonNode.class);
+        return toEntity(response.getBody());
     }
 
     public void deletePlayer(String recordId) {
