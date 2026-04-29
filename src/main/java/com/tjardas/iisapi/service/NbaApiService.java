@@ -29,7 +29,7 @@ public class NbaApiService {
     @Value("${pocketbase.auth-token:}")
     private String pocketBaseAuthToken;
 
-    private final RestTemplate restTemplate = buildRestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public Players getFilteredPlayers(String name, String team, Integer season) {
         String endpoint = String.format("%s/api/collections/%s/records", pocketBaseInstance, PLAYERS_COLLECTION);
@@ -97,13 +97,6 @@ public class NbaApiService {
         String endpoint = String.format("%s/api/collections/%s/records/%s", pocketBaseInstance, PLAYERS_COLLECTION, recordId);
         HttpEntity<Void> requestEntity = new HttpEntity<>(buildHeaders());
         restTemplate.exchange(endpoint, HttpMethod.DELETE, requestEntity, Void.class);
-    }
-
-    private RestTemplate buildRestTemplate() {
-        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(15000);
-        return new RestTemplate(requestFactory);
     }
 
     private HttpHeaders buildHeaders() {
