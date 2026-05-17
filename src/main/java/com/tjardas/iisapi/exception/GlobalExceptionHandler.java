@@ -1,5 +1,7 @@
 package com.tjardas.iisapi.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.tjardas.iisapi.dto.ErrorResponse;
 import jakarta.xml.bind.JAXBException;
 import org.springframework.http.HttpStatus;
@@ -62,9 +64,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex) {
+        Throwable rootCause = ex.getMostSpecificCause();
+        if (rootCause instanceof InvalidFormatException invalidFormatException) {
+            return ResponseEntity.badRequest().body(ErrorResponse.builder()
+                    .message("Validation failed.")
+                    .errors(List.of(buildTypeErrorMessage(invalidFormatException)))
+                    .build());
+        }
+
         return ResponseEntity.badRequest().body(ErrorResponse.builder()
-                .message("Request payload is not readable.")
-                .detail(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage())
+                .message("Validation failed.")
+                .errors(List.of("Request payload is not readable."))
                 .build());
     }
 
@@ -89,5 +99,19 @@ public class GlobalExceptionHandler {
 
     private String formatFieldError(FieldError fieldError) {
         return fieldError.getField() + ": " + fieldError.getDefaultMessage();
+    }
+
+    private String buildTypeErrorMessage(InvalidFormatException ex) {
+        String fieldName = ex.getPath().stream()
+                .map(JsonMappingException.Reference::getFieldName)
+                .filter(name -> name != null && !name.isBlank())
+                .findFirst()
+                .orElse("field");
+
+        return switch (fieldName) {
+            case "season" -> "season must be a valid whole number.";
+            case "points" -> "points must be a valid number.";
+            default -> fieldName + " has an invalid value type.";
+        };
     }
 }
