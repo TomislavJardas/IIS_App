@@ -1,0 +1,25 @@
+type Player {
+  recordId: ID
+  name: String
+  team: String
+  season: Int
+  points: Float
+}
+
+input PlayerInput {
+  name: String!
+  team: String!
+  season: Int!
+  points: Float!
+}
+
+type Query {
+  players: [Player]
+  playerById(recordId: ID!): Player
+}
+
+type Mutation {
+  createPlayer(input: PlayerInput!): Player
+  updatePlayer(recordId: ID!, input: PlayerInput!): Player
+  deletePlayer(recordId: ID!): Boolean
+}
