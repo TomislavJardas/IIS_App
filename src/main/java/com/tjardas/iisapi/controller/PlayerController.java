@@ -79,7 +79,7 @@ public class PlayerController {
                     playerEntity.setSeason(Integer.parseInt(element.getElementsByTagName("season").item(0).getTextContent()));
                     playerEntity.setPoints(Float.parseFloat(element.getElementsByTagName("points").item(0).getTextContent()));
                 } catch (NumberFormatException | NullPointerException e) {
-                    throw new XmlValidationException("XML validation failed.", extractFieldSpecificXmlErrors(element), e);
+                    throw new XmlValidationException("XML validation failed.", List.of("Invalid numeric field value in XML payload."), e);
                 }
 
                 playerEntities.add(playerEntity);
@@ -96,39 +96,6 @@ public class PlayerController {
         });
 
         return "XML successfully validated and saved to PocketBase players collection!";
-    }
-
-
-    private Map<String, String> extractFieldSpecificXmlErrors(Element element) {
-        Map<String, String> errors = new LinkedHashMap<>();
-
-        String season = safeText(element, "season");
-        if (season != null) {
-            try {
-                Integer.parseInt(season);
-            } catch (NumberFormatException ex) {
-                errors.put("season", "Season must be a valid integer.");
-            }
-        }
-
-        String points = safeText(element, "points");
-        if (points != null) {
-            try {
-                Float.parseFloat(points);
-            } catch (NumberFormatException ex) {
-                errors.put("points", "Points must be a valid number.");
-            }
-        }
-
-        if (errors.isEmpty()) {
-            errors.put("xml", "Invalid XML player payload.");
-        }
-        return errors;
-    }
-
-    private String safeText(Element element, String tagName) {
-        Node node = element.getElementsByTagName(tagName).item(0);
-        return node == null ? null : node.getTextContent();
     }
 
     private Document parseXmlDocument(String xml) {

@@ -1,7 +1,5 @@
 package com.tjardas.iisapi.exception;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.tjardas.iisapi.dto.ErrorResponse;
 import jakarta.xml.bind.JAXBException;
 import org.springframework.http.HttpStatus;
@@ -11,29 +9,18 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLStreamException;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(XmlValidationException.class)
     public ResponseEntity<ErrorResponse> handleXmlValidation(XmlValidationException ex) {
-        Map<String, String> errors = ex.getErrors();
-        if (errors != null && errors.containsKey("xml") && errors.size() == 1) {
-            return ResponseEntity.badRequest().body(ErrorResponse.builder()
-                    .message("XML validation failed.")
-                    .detail(errors.get("xml"))
-                    .build());
-        }
-
         return ResponseEntity.badRequest().body(ErrorResponse.builder()
                 .message("XML validation failed.")
-                .errors(errors)
+                .errors(ex.getErrors())
                 .build());
     }
 
@@ -55,10 +42,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
-        }
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> formatFieldError(fieldError))
+                .toList();
 
         return ResponseEntity.badRequest().body(ErrorResponse.builder()
                 .message("Validation failed.")
@@ -76,20 +62,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex) {
-        Throwable cause = ex.getMostSpecificCause();
-        if (cause instanceof InvalidFormatException ife) {
-            String field = extractLastFieldName(ife);
-            if (field != null) {
-                return ResponseEntity.badRequest().body(ErrorResponse.builder()
-                        .message("Invalid request data.")
-                        .errors(Map.of(field, fieldTypeMessage(field)))
-                        .build());
-            }
-        }
-
         return ResponseEntity.badRequest().body(ErrorResponse.builder()
-                .message("Invalid request data.")
-                .detail(cause != null ? cause.getMessage() : ex.getMessage())
+                .message("Request payload is not readable.")
+                .detail(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage())
                 .build());
     }
 
@@ -112,22 +87,7 @@ public class GlobalExceptionHandler {
                 .build());
     }
 
-    private String extractLastFieldName(InvalidFormatException exception) {
-        if (exception.getPath() == null || exception.getPath().isEmpty()) {
-            return null;
-        }
-        JsonMappingException.Reference ref = exception.getPath().get(exception.getPath().size() - 1);
-        return ref.getFieldName();
-    }
-
-    private String fieldTypeMessage(String field) {
-        String normalized = field.toLowerCase(Locale.ROOT);
-        return switch (normalized) {
-            case "points" -> "Points must be a valid number.";
-            case "season" -> "Season must be a valid integer.";
-            case "name" -> "Name is required.";
-            case "team" -> "Team is required.";
-            default -> "Invalid value for field '" + field + "'.";
-        };
+    private String formatFieldError(FieldError fieldError) {
+        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
     }
 }

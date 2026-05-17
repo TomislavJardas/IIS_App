@@ -1,16 +1,16 @@
 package com.tjardas.iisapi.exception;
 
-import java.util.Map;
+import java.util.List;
 
 public class XmlValidationException extends RuntimeException {
-    private final Map<String, String> errors;
+    private final List<String> errors;
 
-    public XmlValidationException(String message, Map<String, String> errors, Throwable cause) {
+    public XmlValidationException(String message, List<String> errors, Throwable cause) {
         super(message, cause);
         this.errors = errors;
     }
 
-    public Map<String, String> getErrors() {
+    public List<String> getErrors() {
         return errors;
     }
 }

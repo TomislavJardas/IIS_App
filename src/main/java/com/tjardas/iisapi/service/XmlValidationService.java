@@ -12,9 +12,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -41,29 +40,9 @@ public class XmlValidationService {
         try (StringReader reader = new StringReader(xml)) {
             validator.validate(new StreamSource(reader));
         } catch (SAXParseException e) {
-            throw new XmlValidationException("XML validation failed.", toFieldErrors(e.getMessage()), e);
+            throw new XmlValidationException("XML validation failed.", List.of(e.getMessage()), e);
         } catch (SAXException e) {
-            throw new XmlValidationException("XML validation failed.", toFieldErrors(e.getMessage()), e);
+            throw new XmlValidationException("XML validation failed.", List.of(e.getMessage()), e);
         }
-    }
-
-    private Map<String, String> toFieldErrors(String rawMessage) {
-        String message = rawMessage == null ? "XML does not match schema." : rawMessage;
-        String lower = message.toLowerCase(Locale.ROOT);
-
-        Map<String, String> errors = new LinkedHashMap<>();
-        if (lower.contains("points")) {
-            errors.put("points", "Points must be a valid number.");
-        } else if (lower.contains("season")) {
-            errors.put("season", "Season must be a valid integer.");
-        } else if (lower.contains("name")) {
-            errors.put("name", "Name is required.");
-        } else if (lower.contains("team")) {
-            errors.put("team", "Team is required.");
-        } else {
-            errors.put("xml", message);
-        }
-
-        return errors;
     }
 }
